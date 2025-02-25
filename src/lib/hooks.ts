@@ -179,7 +179,7 @@ export function useLocalStorage<T>(
     }
   }, [value, key]);
 
-  return [value as T, setValue] as const;
+  return [value, setValue];
 }
 
 export function useOnClickOutside(
