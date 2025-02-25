@@ -94,14 +94,15 @@ export function useJobItems(ids: number[]) {
   });
   const jobItems = results
     .map((result) => result.data?.jobItem)
-    .filter((jobItem) => jobItem !== undefined);
+    .filter((jobItem): jobItem is jobItemExpanded => jobItem !== undefined); // Aquí usamos el tipo guardia
+
   const isLoading = results.some((result) => result.isLoading);
+
   return {
     jobItems,
     isLoading,
   };
 }
-
 //---------------------------------------------------
 
 type JobItemsApiResponse = {
@@ -160,12 +161,22 @@ export function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
-  const [value, setValue] = useState(() =>
-    JSON.parse(localStorage.getItem(key) || JSON.stringify(initialValue))
-  );
+  const [value, setValue] = useState(() => {
+    const storedValue = localStorage.getItem(key);
+    try {
+      return storedValue ? JSON.parse(storedValue) : initialValue;
+    } catch (e) {
+      console.error('Error parsing localStorage item', e);
+      return initialValue; // Si hay un error, usamos el valor por defecto.
+    }
+  });
 
   useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(value));
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.error('Error saving to localStorage', e);
+    }
   }, [value, key]);
 
   return [value, setValue] as const;
